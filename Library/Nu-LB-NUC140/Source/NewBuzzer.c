@@ -1,7 +1,7 @@
 /*
     NewBuzzer
     Author: 邱柏宇
-    Discord: poyu39
+    email: poyu39.tw@gmail.com
 */
 #include <stdio.h>
 #include "NUC100Series.h"

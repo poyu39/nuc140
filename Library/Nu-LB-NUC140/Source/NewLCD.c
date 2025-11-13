@@ -1,7 +1,7 @@
 /*
     NewLCD
     Author: 邱柏宇
-    Discord: poyu39
+    email: poyu39.tw@gmail.com
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,7 +56,7 @@ void lcdSetAddr(uint8_t PageAddr, uint8_t ColumnAddr) {
     SPI_SET_SS0_HIGH(SPI3);
 }
 
-// 初始化 LCD 的 buffer
+// init lcd buffer
 void init_lcd_buffer() {
     int i, x, y;
     for (i = 0; i < LCD_Xmax * LCD_Ymax / 8; i++) {
@@ -70,7 +70,7 @@ void init_lcd_buffer() {
     }
 }
 
-// 只清除 LCD，不會清除 buffer。
+// only clear lcd (not buffer)
 void clear_lcd() {
     int16_t i;
     lcdSetAddr(0x00, 0x00);
@@ -80,8 +80,8 @@ void clear_lcd() {
 }
 
 /**
- * @brief 初始化 LCD
- * @param auto_clear 是否每次 show_lcd_buffer 自動清除 buffer。
+ * @brief init LCD
+ * @param auto_clear enable auto clear buffer after show_lcd_buffer
 */
 void init_lcd(uint8_t auto_clear, uint32_t spi_clock_frequency) {
     init_SPI3(spi_clock_frequency);
@@ -95,7 +95,7 @@ void init_lcd(uint8_t auto_clear, uint32_t spi_clock_frequency) {
     auto_clear_flag = auto_clear;
 }
 
-// 將 buffer 的內容顯示到 LCD 上
+// show lcd buffer content on lcd
 void show_lcd_buffer() {
     uint8_t x, y;
     for (y = 0; y < (LCD_Ymax / 8); y++) {
@@ -109,8 +109,7 @@ void show_lcd_buffer() {
     }
 }
 
-
-// 清除 buffer 的內容
+// clear lcd buffer content
 void clear_lcd_buffer() {
     int i;
     for (i = 0; i < LCD_Xmax * LCD_Ymax / 8; i++) {
@@ -118,11 +117,19 @@ void clear_lcd_buffer() {
     }
 }
 
+// cover lcd buffer with input array
+void cover_lcd_buffer(uint8_t input[]) {
+    int i;
+    for (i = 0; i < LCD_Xmax * LCD_Ymax / 8; i++) {
+        lcd_buffer_hex[i] = input[i];
+    }
+}
+
 /**
- * @brief 畫一個 pixel 在 buffer 中
- * @param x x 座標
- * @param y y 座標
- * @param color 顏色
+ * @brief draw a pixel in buffer
+ * @param x x
+ * @param y y
+ * @param color color (FG_COLOR or BG_COLOR)
 */
 void draw_pixel_in_buffer(int16_t x, int16_t y, uint16_t color) {
     if (color == FG_COLOR)
@@ -132,13 +139,13 @@ void draw_pixel_in_buffer(int16_t x, int16_t y, uint16_t color) {
 }
 
 /**
- * @brief 畫一個 bitmap 在 buffer 中
- * @param bitmap 圖形陣列
- * @param x x 座標
- * @param y y 座標
- * @param bitmap_x_size 圖形的 x 大小
- * @param bitmap_y_size 圖形的 y 大小
- * @param color 顏色
+ * @brief draw a bitmap in buffer
+ * @param bitmap bitmap array
+ * @param x x
+ * @param y y
+ * @param bitmap_x_size bitmap width
+ * @param bitmap_y_size bitmap height
+ * @param color color (FG_COLOR or BG_COLOR)
 */
 void draw_bitmap_in_buffer(uint8_t bitmap[], int16_t x, int16_t y, int16_t bitmap_x_size, int16_t bitmap_y_size, uint16_t color) {
     uint16_t t, i, j, k, kx, ky;
@@ -149,20 +156,21 @@ void draw_bitmap_in_buffer(uint8_t bitmap[], int16_t x, int16_t y, int16_t bitma
             t = bitmap[j + i * bitmap_x_size];
             for (k = 0; k < 8; k++) {
                 ky = y + k + i * 8;
-                if (t & (0x01 << k))
+                if (t & (0x01 << k)) {
                     draw_pixel_in_buffer(kx, ky, color);
+                }
             }
         }
     }
 }
 
 /**
- * @brief 畫一條線在 buffer 中
- * @param x1 起始 x 座標
- * @param y1 起始 y 座標
- * @param x2 結束 x 座標
- * @param y2 結束 y 座標
- * @param color 顏色
+ * @brief draw a line in buffer
+ * @param x1 start x
+ * @param y1 start y
+ * @param x2 end x
+ * @param y2 end y
+ * @param color color (FG_COLOR or BG_COLOR)
 */
 void draw_line_in_buffer(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
     int16_t dy = y2 - y1;
@@ -211,14 +219,14 @@ void draw_line_in_buffer(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_
 }
 
 /**
- * @brief 畫一個圓在 buffer 中
- * @param xc 圓心 x 座標
- * @param yc 圓心 y 座標
- * @param r 半徑
- * @param color 顏色
- * @param isFill 是否填滿
+ * @brief draw a circle in buffer
+ * @param xc center x
+ * @param yc center y
+ * @param r radius
+ * @param color color (FG_COLOR or BG_COLOR)
+ * @param is_fill whether fill the circle
 */
-void draw_circle_in_buffer(int16_t xc, int16_t yc, int16_t r, uint16_t color, uint8_t isFill) {
+void draw_circle_in_buffer(int16_t xc, int16_t yc, int16_t r, uint16_t color, uint8_t is_fill) {
     int16_t x = 0;
     int16_t y = r;
     int16_t p = 3 - 2 * r;
@@ -233,7 +241,7 @@ void draw_circle_in_buffer(int16_t xc, int16_t yc, int16_t r, uint16_t color, ui
         draw_pixel_in_buffer(xc - y, yc + x, color);  // lower lower left
         draw_pixel_in_buffer(xc + y, yc + x, color);  // lower lower right
         draw_pixel_in_buffer(xc + x, yc + y, color);  // lower right right
-        if (isFill == 1) {
+        if (is_fill == 1) {
             draw_line_in_buffer(xc - x, yc - y, xc + x, yc - y, color);
             draw_line_in_buffer(xc - y, yc - x, xc + y, yc - x, color);
             draw_line_in_buffer(xc - x, yc + y, xc + x, yc + y, color);
@@ -247,15 +255,15 @@ void draw_circle_in_buffer(int16_t xc, int16_t yc, int16_t r, uint16_t color, ui
 }
 
 /**
- * @brief 畫一個矩形在 buffer 中
- * @param x0 左上角 x 座標
- * @param y0 左上角 y 座標
- * @param x1 右下角 x 座標
- * @param y1 右下角 y 座標
- * @param color 顏色
- * @param isFill 是否填滿
+ * @brief draw a rectangle in buffer
+ * @param x0 left top x
+ * @param y0 left top y
+ * @param x1 right bottom x
+ * @param y1 right bottom y
+ * @param color color (FG_COLOR or BG_COLOR)
+ * @param is_fill whether fill the rectangle
 */
-void draw_rectangle_in_buffer(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint8_t isFill) {
+void draw_rectangle_in_buffer(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint8_t is_fill) {
     int16_t x, y, tmp;
     if (x0 > x1) {
         tmp = x1;
@@ -267,7 +275,7 @@ void draw_rectangle_in_buffer(int16_t x0, int16_t y0, int16_t x1, int16_t y1, ui
         y1 = y0;
         y0 = tmp;
     }
-    if (isFill == 1) {
+    if (is_fill == 1) {
         for (x = x0; x <= x1; x++) {
             for (y = y0; y <= y1; y++) {
                 draw_pixel_in_buffer(x, y, color);
@@ -282,15 +290,15 @@ void draw_rectangle_in_buffer(int16_t x0, int16_t y0, int16_t x1, int16_t y1, ui
 }
 
 /**
- * @brief 畫一個三角形在 buffer 中
- * @param x0 第一個點 x 座標
- * @param y0 第一個點 y 座標
- * @param x1 第二個點 x 座標
- * @param y1 第二個點 y 座標
- * @param x2 第三個點 x 座標
- * @param y2 第三個點 y 座標
- * @param color 顏色
- * @param isFill 是否填滿
+ * @brief draw a triangle in buffer
+ * @param x0 first point x
+ * @param y0 first point y
+ * @param x1 second point x
+ * @param y1 second point y
+ * @param x2 third point x
+ * @param y2 third point y
+ * @param color color (FG_COLOR or BG_COLOR)
+ * @param isFill whether fill the triangle
 */
 void draw_triangle_in_buffer(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, uint8_t isFill) {
     int i;
@@ -313,11 +321,12 @@ void draw_triangle_in_buffer(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int
 }
 
 /**
- * @brief 在 buffer 中印出一個字元
- * @param x x 座標
- * @param y y 座標
- * @param size 字元大小 (5 or 8)
- * @param ascii_code 字元
+ * @brief print a character in buffer
+ * @param x x
+ * @param y y
+ * @param size font size (5 or 8)
+ * @param ascii_code ascii code
+ * @param color color (FG_COLOR or BG_COLOR)
 */
 void print_c_in_buffer(int16_t x, int16_t y, uint8_t size, unsigned char ascii_code, uint16_t color) {
     int8_t i, j;
@@ -346,11 +355,11 @@ void print_c_in_buffer(int16_t x, int16_t y, uint8_t size, unsigned char ascii_c
 }
 
 /**
- * @brief 在 buffer 中印出一個字串
- * @param x x 座標
- * @param y y 座標
- * @param size 字元大小 (5 or 8)
- * @param format 格式化字串
+ * @brief print a formatted string in buffer
+ * @param x x
+ * @param y y
+ * @param size font size (5 or 8)
+ * @param format formatted string
 */
 void printf_s_in_buffer(int16_t x, int16_t y, uint8_t size, const char *format, ...) {
     int8_t i;
@@ -364,10 +373,10 @@ void printf_s_in_buffer(int16_t x, int16_t y, uint8_t size, const char *format, 
 }
 
 /**
- * @brief 在 buffer 中印出一行字串
- * @param line 行數
- * @param size 字元大小 (5 or 8)
- * @param format 格式化字串
+ * @brief print a formatted string in buffer on a specific line
+ * @param line line number (0~7 for size 5, 0~3 for size 8)
+ * @param size font size (5 or 8)
+ * @param format formatted string
 */
 void printf_line_in_buffer(int8_t line, uint8_t size, const char *format, ...) {
     uint8_t line_height = (size == 5) ? 8 : 16;
@@ -382,9 +391,9 @@ void printf_line_in_buffer(int8_t line, uint8_t size, const char *format, ...) {
 }
 
 /**
- * @brief 取得 buffer 中的一個 pixel
- * @param x x 座標
- * @param y y 座標
+ * @brief get a specific pixel value from lcd buffer
+ * @param x x
+ * @param y y
  * @return 0 or 1
 */
 uint8_t get_lcd_buffer_pixel(int16_t x, int16_t y) {

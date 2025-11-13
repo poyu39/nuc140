@@ -1,7 +1,7 @@
 /*
     NewSevenSegment
     Author: 邱柏宇
-    Discord: poyu39
+    email: poyu39.tw@gmail.com
 */
 #include <stdio.h>
 #include "NUC100Series.h"
@@ -29,19 +29,19 @@
 
 uint8_t seg_map[17] = {SEG_NONE, SEG_N0, SEG_N1, SEG_N2, SEG_N3, SEG_N4, SEG_N5, SEG_N6, SEG_N7, SEG_N8, SEG_N9, SEG_N10, SEG_N11, SEG_N12, SEG_N13, SEG_N14, SEG_N15};
 
-// 用來儲存七段顯示器3~0的數字
+// save seg buffer (3~0)
 int8_t seg_buffer[4];
 
-// 用來控制是否開啟七段顯示器3~0的輪播功能
+// use SEG_LOOP to control seg loop
 uint8_t SEG_LOOP = 1;
 
 volatile uint8_t seg_index = 0;
 
 /**
-  * @brief                          將七段顯示器的數字設定為指定的數字
+  * @brief                          set one segment display
   *
-  * @param[in]  no                  七段顯示器的編號： 從左到右為 3-0
-  * @param[in]  sn                  要顯示的數字或英文字母： -1 不顯示任何數字，0-9 數字， 10-15 英文字母A-F。
+  * @param[in]  no                  the segment index (3~0)
+  * @param[in]  sn                  the number or letter to display: -1 for none, 0-9 for numbers, 10-15 for letters A-F
   *
   */
 void show_one_seg(uint8_t no, int8_t sn) {
@@ -49,12 +49,12 @@ void show_one_seg(uint8_t no, int8_t sn) {
     GPIO_PIN_DATA(2, no + 4) = 1;
 }
 
-// 關閉七段顯示器
+// close all seg
 void close_seg(void) {
     PC4 = 0; PC5 = 0; PC6 = 0; PC7 = 0;
 }
 
-// 設定七段顯示器的數字
+// set seg buffer number
 void set_seg_buffer_number(uint16_t number, uint8_t fill_zero) {
     static uint16_t last_number;
     if (number == last_number) return;
@@ -70,7 +70,7 @@ void set_seg_buffer_number(uint16_t number, uint8_t fill_zero) {
     last_number = number;
 }
 
-// 清除七段顯示器 buffer
+// clear seg buffer
 void clear_seg_buffer(void) {
     seg_buffer[3] = -1;
     seg_buffer[2] = -1;
@@ -94,12 +94,12 @@ void init_timer0(uint8_t timer_hz) {
 }
 
 /**
-  * @brief                          初始化七段顯示器
+  * @brief                          intialize seven segment display
   *
-  * @param[in]  use_timer           是否使用 timer 來控制七段顯示器的輪播功能
-  * @param[in]  timer_hz            timer 的頻率
+  * @param[in]  use_timer           enable timer for seg loop control
+  * @param[in]  timer_hz            timer hz
   *
-  * @note                           timer 輪播為使用 timer0 來控制七段顯示器的輪播功能
+  * @note                           timer0 will be used to control seg loop if use_timer is 1
   */
 void init_seg(uint8_t use_timer, uint8_t timer_hz) {
     GPIO_SetMode(PC, (BIT4 | BIT5 | BIT6 | BIT7), GPIO_PMD_OUTPUT);
