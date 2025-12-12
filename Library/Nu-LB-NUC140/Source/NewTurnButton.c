@@ -24,9 +24,6 @@ void init_turn_button(void) {
     ADC_POWER_ON(ADC);
     ADC_EnableInt(ADC, ADC_ADF_INT);
     NVIC_EnableIRQ(ADC_IRQn);
-    
-    PWM_EnableOutput(PWM1, PWM_CH_0_MASK);
-    PWM_Start(PWM1, PWM_CH_0_MASK);
 }
 
 // get turn button value
@@ -34,5 +31,6 @@ uint16_t get_turn_button(void) {
     ADC_START_CONV(ADC);
     while (isConverted == 0);
     isConverted = 0;
+    ADC_STOP_CONV(ADC);
     return (uint16_t) ADC_GET_CONVERSION_DATA(ADC, 7);
 }
